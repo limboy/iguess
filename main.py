@@ -70,8 +70,8 @@ class BaseHandler(webapp.RequestHandler):
                 'login_url': users.create_login_url('/'),
             }
 
-        #if self.is_mobi:
-        tpl += '.mobi'
+        if self.is_mobi:
+            tpl += '.mobi'
 
         if not self.is_ajax:
             path = os.path.join('tpl', tpl + '.html')
