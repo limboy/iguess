@@ -384,7 +384,11 @@ $(function(){
 	$('.page_btn').live('click', function(e){
 		e.preventDefault();
 		var $self = $(this);
+        if($self.hasClass('disabled')){
+            return false;
+        }
 		var href = $self.attr('href');
+        $self.text('正在载入...').css({'background': '#fff', 'color': '#777', 'cursor': 'default'}).addClass('disabled');
 		$.getJSON(href, function(result){
 			$self.hide().after(result.content.html);
 		});
