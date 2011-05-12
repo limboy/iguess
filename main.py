@@ -16,6 +16,8 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer
 
+SYSTEM_VERSION = '1.0.0'
+
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
 
@@ -56,6 +58,7 @@ class BaseHandler(webapp.RequestHandler):
     def render(self, tpl, values = {}):
         user = users.get_current_user()
         values['is_dev'] = self.is_dev;
+        values['system_version'] = SYSTEM_VERSION
         if user:
             values['user'] = {
                 'logged_in': True,
