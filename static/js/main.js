@@ -390,7 +390,23 @@ $(function(){
 		});
 	});
 
+    $('#entity-list').delegate('.rt .answer form', 'submit', function(e){
+        e.preventDefault();
+        var $self = $(this);
+        $.post($self.attr('action'), $self.serialize(), function(result){
+            if(result.status == 'ok') {
+                $self.parent().find('.fail').text('');
+                $self.parent().find('.success').text(result.content.message);
+                $self.find('input[name="answer"]').attr('disabled', true).css('background', '#eee').get(0).blur();
+            } else {
+                $self.parent().find('.fail').text(result.content.message);
+            }
+        }, 'json');
+    });
+
     if($.browser.webkit) {
         $('ul.type li').css('line-height', '27px');
+        $('.answer input[name="answer"]').css({'padding': '1px 6px 6px'});
+        $('.c-answer').css('margin-bottom', '2px')
     }
 });

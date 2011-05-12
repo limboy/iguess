@@ -4,8 +4,21 @@
         <p class="sentence">
         {{ segment.sentence }}
         </p>
-        <p class="clear" style="padding-bottom:1px"><a class="btn c-answer" href="#">看影名</a>
-        <span class="hide answer">{{ segment.answer }}</span>
+        <div class="clear">
+            {% if segment.has_answered %}
+            <a class="btn c-answer" href="#">看影名</a>
+            <span class="hide real-answer">{{ segment.answer }}</span>
+            {% else %}
+            <span class="answer">
+                <form action="/guess" method="post">
+                <input name="id" value="{{ segment.key.id }}" type="hidden" />
+                <input type="text" name="answer" placeholder="输入电影名，回车" />
+                </form>
+                <span class="success"></span>
+                <span class="fail"></span>
+            </span>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endfor %}

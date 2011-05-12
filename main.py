@@ -14,7 +14,7 @@ from google.appengine.dist import use_library
 use_library('django', '1.2')
 from google.appengine.ext.webapp import template
 from google.appengine.ext import db
-from model import Topic,Vote
+from model import Topic,Vote,UserAnswer
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
@@ -70,8 +70,8 @@ class BaseHandler(webapp.RequestHandler):
                 'login_url': users.create_login_url('/'),
             }
 
-        if self.is_mobi:
-            tpl += '.mobi'
+        #if self.is_mobi:
+        tpl += '.mobi'
 
         if not self.is_ajax:
             path = os.path.join('tpl', tpl + '.html')
@@ -144,12 +144,32 @@ class DelHandler(BaseHandler):
         topic = Topic.get(self.request.get('key').strip()).delete()
         self.redirect('/')
 
+class GuessHandler(BaseHandler):
+    def post(self):
+        topic = Topic.get_by_id(int(self.request.get('id')))
+        if not topic:
+            self.response.out.write('莫有找到台词~~~')
+            return
+
+        user = users.get_current_user()
+        if topic.answer == self.request.get('answer'):
+            if user:
+                ua = UserAnswer()
+                ua.user = user
+                ua.topic = topic
+                ua.put()
+            self.response.out.write(json_output('ok', {'message': '答对了，不错哦'}))
+            return
+        self.response.out.write(json_output('fail', {'message': '再想想？'}))
+
+
 application = webapp.WSGIApplication(
 	[('/', MainPage),
      ('/publish', SentenceHandler),
      ('/vote', VoteHandler),
      ('/top', TopHandler),
      ('/del', DelHandler),
+     ('/guess', GuessHandler),
 		],
 	debug=True)
 

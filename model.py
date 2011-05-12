@@ -28,9 +28,26 @@ class Topic(db.Model):
             return False
         return True
 
+    def has_answered(self):
+        user = users.get_current_user()
+        if not user:
+            return False
+
+        ua = UserAnswer.all()
+        ua.filter('topic =', self.key())
+        ua.filter('user =', user)
+        result = ua.get()
+        if result:
+            return True
+        return False
+
 class Vote(db.Model):
     author = db.UserProperty()
     topic = db.ReferenceProperty(Topic)
     mark = db.IntegerProperty()
     date = db.DateTimeProperty(auto_now_add=True)
 
+class UserAnswer(db.Model):
+    user = db.UserProperty()
+    topic = db.ReferenceProperty(Topic)
+    date = db.DateTimeProperty(auto_now_add=True)

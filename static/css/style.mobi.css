@@ -5,6 +5,12 @@ body {
     font:14px Helvetica, 'Microsoft Yahei', Arial;
 }
 
+ul, li {
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
 a {
     text-decoration:none;
     color:#4497C7;
@@ -12,8 +18,8 @@ a {
 
 .btn {
     display:inline-block;
-    line-height: 22px;
-    height: 22px;
+    line-height: 24px;
+    height: 24px;
     vertical-align: middle;
     background: -o-linear-gradient(top,white,#DDD);
     font-size: 14px;
@@ -38,6 +44,18 @@ a {
     text-decoration:none;
 }
 
+#header ul {
+    float:right;
+    margin-right:20px;
+}
+
+#header li {
+    float:left;
+    line-height:60px;
+    margin-left:20px;
+    color:#fff;
+}
+
 #logo {
     font-size:30px;
     font-weight:bold;
@@ -55,20 +73,12 @@ a {
     margin:10px;
 }
 
-.answer {
-    color:#666;
-    font-size:12px;
-    padding-left:10px;
-    line-height:18px;
-}
-
 .clear {
     overflow:hidden;
 }
 
 .segment {
-    padding-left:20px;
-    padding-right:20px;
+    padding:0 20px 20px;
     margin:0;
     border-bottom:1px solid #ccc;
 }
@@ -83,4 +93,28 @@ a {
 
 .no-more {
     padding-left:20px;
+}
+
+span.real-answer {
+    line-height:24px;
+    padding-left:10px;
+    color:#666;
+}
+
+.answer input[type="text"]{
+    border:1px solid #bbb;
+    padding:3px;
+    margin:3px 5px 0 0;
+    font-size:14px;
+}
+.answer .success {
+    color: green;
+    font-size:14px;
+}
+.answer .fail {
+    color: red;
+    font-size:14px;
+}
+.answer form {
+    display:inline;
 }

@@ -27,13 +27,6 @@ a:hover {
     margin:10px;
 }
 
-.answer {
-    color:#666;
-    font-size:12px;
-    padding-left:10px;
-    line-height:18px;
-}
-
 .upvote {
     height:0;
     width:0;
@@ -271,6 +264,30 @@ ul, li {
                         cursor:default;
                     }
                 }
+                span.real-answer {
+                    line-height:24px;
+                    padding-left:10px;
+                    color:#666;
+                }
+                .answer {
+                    input[type="text"] {
+                        .rounded-corners;
+                        border:1px solid #bbb;
+                        padding:3px;
+                        margin:3px 5px 0 3px;
+                    }
+                    .success {
+                        color: green;
+                        font-size:12px;
+                    }
+                    .fail {
+                        color: red;
+                        font-size:12px;
+                    }
+                    form {
+                        display:inline;
+                    }
+                }
                 .mark {
                     font:20px Helvetica,Arial,sans-serif;
                     color:#666;
@@ -282,18 +299,21 @@ ul, li {
                     font-size:12px;
                     line-height:20px;
                     height:20px;
+                    margin-top:3px;
                 }
                 .author {
                     float:right;
                     font-size:12px;
+                    padding-top:6px;
                 }
                 .rt {
                     margin-top:5px;
-                    margin-left:40px;
+                    margin-left:37px;
                 }
                 .sentence {
                     color:#444;
                     line-height:150%;
+                    margin-left:5px;
                 }
             }
         }
