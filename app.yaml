@@ -8,6 +8,7 @@ skip_files: |
  (app\.yaml)|
  (.*~)|
  (.*\.py[co])|
+ (\..*)|
  )$
 
 builtins:
