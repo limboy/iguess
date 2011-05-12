@@ -31,7 +31,11 @@
 
                     <div class="box-white" id="entity-list">
                         <div class="header">
+							{% if user.logged_in %}
                             <span class="rand" style="padding-left:5px"> 我拼命读书为了将来，谁知道没有将来 </span>
+							{% else %}
+                            <span class="rand" style="padding-left:5px">登录后就可以添加台词让大家猜啦~~~</span>
+							{% endif %}
                             <ul class="type">
                                 <li><a class="latest" href="/">最新</a></li>
 								<!--<li><a class="hot" href="#">热门</a></li>-->
