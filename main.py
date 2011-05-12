@@ -16,7 +16,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer
 
-SYSTEM_VERSION = '1.0.0'
+SYSTEM_VERSION = '1.0.2'
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})

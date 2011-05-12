@@ -13,6 +13,7 @@
                 <form action="/guess" method="post">
                 <input name="id" value="{{ segment.key.id }}" type="hidden" />
                 <input type="text" name="answer" placeholder="输入电影名，回车" />
+                <input class="btn" style="margin-top:-4px;height:26px;line-height:26px;margin-right:3px" type="SUBMIT" value="我猜" />
                 </form>
                 <span class="success"></span>
                 <span class="fail"></span>
