@@ -19,7 +19,10 @@
         </p>
         <div class="clear" style="padding-bottom:1px">
             {% if segment.has_answered %}
-            <a class="btn c-answer" href="#">看影名</a>
+            <a class="btn c-answer" href="#">✓ 看影名</a>
+            <span class="hide real-answer">{{ segment.answer }}</span>
+            {% else %} {% if segment.has_seen_answer %}
+            <a class="btn c-answer" href="#">✗ 看影名</a>
             <span class="hide real-answer">{{ segment.answer }}</span>
             {% else %}
             <span class="answer">
@@ -28,9 +31,13 @@
                 <input type="text" name="answer" placeholder="输入电影名，回车" />
                 </form>
                 <span class="success"></span>
-                <span class="fail"></span>
+                <span class="fail hide"><span class="message"></span>
+                {% if user.logged_in %}
+                <a class="btn view-answer" style="display:inline-block; font-size:12px; line-height:20px; height:20px" href="/getanswer?id={{ segment.key.id}}">看答案</a>
+                {% endif %}
+                </span>
             </span>
-            {% endif %}
+            {% endif %} {% endif %}
             <a href="https://profiles.google.com/{{ segment.author.nickname }}" target="_blank" class="author">{{ segment.author.nickname }}</a>
         </div>
     </div>

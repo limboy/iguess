@@ -14,9 +14,9 @@ from google.appengine.dist import use_library
 use_library('django', '1.2')
 from google.appengine.ext.webapp import template
 from google.appengine.ext import db
-from model import Topic,Vote,UserAnswer
+from model import Topic,Vote,UserAnswer,UserSeen
 
-SYSTEM_VERSION = '1.0.3'
+SYSTEM_VERSION = '1.0.4'
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
@@ -165,6 +165,23 @@ class GuessHandler(BaseHandler):
             return
         self.response.out.write(json_output('fail', {'message': '再想想？'}))
 
+class ViewAnswerHandler(BaseHandler):
+    def get(self):
+        topic = Topic.get_by_id(int(self.request.get('id')))
+        if not topic:
+            self.response.out.write('莫有找到台词~~~')
+            return
+
+        user = users.get_current_user()
+        if user:
+            ua = UserSeen()
+            ua.user = user
+            ua.topic = topic
+            ua.put()
+            self.response.out.write(json_output('ok', {'message': topic.answer}))
+            return
+        self.response.out.write('登录后就能看到答案了');
+        
 
 application = webapp.WSGIApplication(
 	[('/', MainPage),
@@ -173,6 +190,7 @@ application = webapp.WSGIApplication(
      ('/top', TopHandler),
      ('/del', DelHandler),
      ('/guess', GuessHandler),
+     ('/getanswer', ViewAnswerHandler),
 		],
 	debug=True)
 

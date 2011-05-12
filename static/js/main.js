@@ -301,7 +301,7 @@ $(function(){
                 $tpl.find('.sentence').text(result.content.sentence);
                 $tpl.find('.answer').text(result.content.answer);
                 $('#segment-tpl').after($tpl);
-                $tpl.css('background', '#FBF9EA').show().animate({
+                $tpl.css('background', '#FFEFC6').show().animate({
                     'backgroundColor': '#fff'
                 }, 2000, function(){
                     $tpl.css('background', 'transparent')
@@ -397,15 +397,30 @@ $(function(){
     $('#entity-list').delegate('.rt .answer form', 'submit', function(e){
         e.preventDefault();
         var $self = $(this);
+
         $.post($self.attr('action'), $self.serialize(), function(result){
             if(result.status == 'ok') {
-                $self.parent().find('.fail').text('');
-                $self.parent().find('.success').text(result.content.message);
-                $self.find('input[name="answer"]').attr('disabled', true).css('background', '#eee').get(0).blur();
+                var $form = $self.parent();
+                $form.find('.fail').text('');
+                $form.find('.success').html(result.content.message);
+                $form.find('input[name="answer"]').attr('disabled', true).css('background', '#eee').get(0).blur();
             } else {
-                $self.parent().find('.fail').text(result.content.message);
+                $self.parent().find('.fail').show().find('.message').text(result.content.message);
             }
         }, 'json');
+    });
+
+    $('#entity-list').delegate('.rt .view-answer', 'click', function(e){
+        e.preventDefault();
+        var $self = $(this);
+        $.getJSON($self.attr('href'), function(result){
+            if(result.status == 'ok') {
+                var $form = $self.parent().parent();
+                $form.find('input[name="answer"]').attr('disabled', true).css('background', '#eee').get(0).blur();
+                $form.find('.fail').text('');
+                $form.find('.success').html(result.content.message);
+            }
+        });
     });
 
     if($.browser.webkit) {

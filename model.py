@@ -41,6 +41,19 @@ class Topic(db.Model):
             return True
         return False
 
+    def has_seen_answer(self):
+        user = users.get_current_user()
+        if not user:
+            return False
+
+        ua = UserSeen.all()
+        ua.filter('topic =', self.key())
+        ua.filter('user =', user)
+        result = ua.get()
+        if result:
+            return True
+        return False
+
 class Vote(db.Model):
     author = db.UserProperty()
     topic = db.ReferenceProperty(Topic)
@@ -48,6 +61,11 @@ class Vote(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
 
 class UserAnswer(db.Model):
+    user = db.UserProperty()
+    topic = db.ReferenceProperty(Topic)
+    date = db.DateTimeProperty(auto_now_add=True)
+
+class UserSeen(db.Model):
     user = db.UserProperty()
     topic = db.ReferenceProperty(Topic)
     date = db.DateTimeProperty(auto_now_add=True)
