@@ -4,6 +4,10 @@ import logging
 from google.appengine.ext import db, deferred
 from google.appengine.api import users
 
+def TopUser():
+    ua = UserAnswer.all()
+    ua.sort()
+
 class Topic(db.Model):
     author = db.UserProperty()
     sentence = db.StringProperty(multiline=True)
@@ -27,6 +31,15 @@ class Topic(db.Model):
         if result:
             return False
         return True
+
+    def is_self_added(self):
+        user = users.get_current_user()
+        if not user:
+            return False
+
+        if user == self.author:
+            return True
+        return False
 
     def has_answered(self):
         user = users.get_current_user()
@@ -69,3 +82,13 @@ class UserSeen(db.Model):
     user = db.UserProperty()
     topic = db.ReferenceProperty(Topic)
     date = db.DateTimeProperty(auto_now_add=True)
+
+class UserAnswerCount(db.Model):
+    user = db.UserProperty()
+    count = db.IntegerProperty()
+
+    def getTop(self):
+        uac = self.all()
+        uac.order('-count')
+        uac.fetch(limit=10)
+        return uac

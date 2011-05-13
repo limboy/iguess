@@ -53,7 +53,7 @@
                                 <div class="rt">
                                     <p class="sentence">
                                     </p>
-									<p class="clear"><a class="btn c-answer" href="#">看影名</a><span class="hide answer"></span> <a href="{{ user.link }}" class="author">{{ user.nickname }}</a></p>
+									<p class="clear"><a class="btn c-answer" href="#">看影名</a><span class="hide real-answer"></span> <a href="{{ user.link }}" class="author">{{ user.nickname }}</a></p>
                                 </div>
                             </div>
                             {% endif %}
@@ -74,9 +74,23 @@
                     <p class="seperator"></p>
 
                     <div class="box-white">
+                        <div class="header">达人秀</div>
+                        <div class="body" style="padding-bottom:0">
+                            <ul class="topuser clear">
+                            {% for item in topuser %}
+                            <li><a title="{{ item.name }}, 共答对了{{ item.count }}道题" href="https://profiles.google.com/{{item.name}}"><img src="{{ item.gravatar }}" /></a></li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <p class="seperator"></p>
+
+                    <div class="box-white">
                         <div class="header">最新进展</div>
                         <div class="body">
                             <p>11/05/12 可以猜电影了~~~</p>
+                            <p>11/05/13 添加了达人秀功能</p>
                         </div>
                     </div>
 

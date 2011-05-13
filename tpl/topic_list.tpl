@@ -24,6 +24,9 @@
             {% else %} {% if segment.has_seen_answer %}
             <a class="btn c-answer" href="#">✗ 看影名</a>
             <span class="hide real-answer">{{ segment.answer }}</span>
+            {% else %} {% if segment.is_self_added %}
+            <a class="btn c-answer" href="#">看影名</a>
+            <span class="hide real-answer">{{ segment.answer }}</span>
             {% else %}
             <span class="answer">
                 <form action="/guess" method="post">
@@ -37,7 +40,7 @@
                 {% endif %}
                 </span>
             </span>
-            {% endif %} {% endif %}
+            {% endif %} {% endif %} {% endif %}
             <a href="https://profiles.google.com/{{ segment.author.nickname }}" target="_blank" class="author">{{ segment.author.nickname }}</a>
         </div>
     </div>

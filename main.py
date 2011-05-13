@@ -3,8 +3,9 @@ import os
 import sys
 import logging
 import re
-
+import urllib, hashlib
 import simplejson as json
+
 
 from google.appengine.ext import webapp
 from google.appengine.api import users
@@ -14,12 +15,15 @@ from google.appengine.dist import use_library
 use_library('django', '1.2')
 from google.appengine.ext.webapp import template
 from google.appengine.ext import db
-from model import Topic,Vote,UserAnswer,UserSeen
+from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
 SYSTEM_VERSION = '1.0.4'
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
+
+def get_gravatar(email):
+    return "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?s=36"
 
 class BaseHandler(webapp.RequestHandler):
 
@@ -39,7 +43,7 @@ class BaseHandler(webapp.RequestHandler):
             return True
         return False
 
-    def render_index(self, type='latest'):
+    def render_index(self, type='latest', data = {}):
         page = int(self.request.get('page', 1))
         offset = (page - 1) * 15
         topic = Topic.all()
@@ -53,7 +57,9 @@ class BaseHandler(webapp.RequestHandler):
         tpl = 'index'
         if self.is_ajax:
             tpl = 'topic_list'
-        self.render(tpl, {'list': list, 'page': page+1, 'list_length': len(list) })
+        default_data = {'list': list, 'page': page+1, 'list_length': len(list) }
+        data.update(default_data)
+        self.render(tpl, data)
 
     def render(self, tpl, values = {}):
         user = users.get_current_user()
@@ -89,7 +95,18 @@ class BaseHandler(webapp.RequestHandler):
 
 class MainPage(BaseHandler):
     def get(self):
-        self.render_index('latest')
+        uac = UserAnswerCount()
+        result = uac.getTop()
+
+        topuser = []
+        for item in result:
+            topuser.append({
+                'gravatar': get_gravatar(item.user.email()),
+                'name': item.user.nickname(),
+                'count': item.count,
+            })
+
+        self.render_index('latest', {'topuser': topuser})
 
 class SentenceHandler(BaseHandler):
     def post(self):
@@ -161,6 +178,14 @@ class GuessHandler(BaseHandler):
                 ua.user = user
                 ua.topic = topic
                 ua.put()
+
+                uac = UserAnswerCount()
+                uac.user = user
+                if uac.count:
+                    uac.count += 1
+                else:
+                    uac.count = 1
+                uac.put()
             self.response.out.write(json_output('ok', {'message': '答对了，不错哦'}))
             return
         self.response.out.write(json_output('fail', {'message': '再想想？'}))

@@ -299,7 +299,7 @@ $(function(){
                 $tpl = $('#segment-tpl').clone();
                 $tpl.removeAttr('id');
                 $tpl.find('.sentence').text(result.content.sentence);
-                $tpl.find('.answer').text(result.content.answer);
+                $tpl.find('.real-answer').text(result.content.answer);
                 $('#segment-tpl').after($tpl);
                 $tpl.css('background', '#FFEFC6').show().animate({
                     'backgroundColor': '#fff'
@@ -426,6 +426,6 @@ $(function(){
     if($.browser.webkit) {
         $('ul.type li').css('line-height', '27px');
         $('.answer input[name="answer"]').css({'padding': '1px 6px 6px'});
-        $('.c-answer').css('margin-bottom', '2px')
+        $('.c-answer').css('margin-bottom', '3px')
     }
 });
