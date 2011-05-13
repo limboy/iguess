@@ -17,7 +17,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
-SYSTEM_VERSION = '1.0.6'
+SYSTEM_VERSION = '1.0.7'
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
@@ -182,11 +182,14 @@ class GuessHandler(BaseHandler):
                 uac = UserAnswerCount.all()
                 uac.filter('user =', user)
                 result = uac.get()
-                if result.count:
+                if result:
                     result.count += 1
+                    result.put()
                 else:
-                    result.count = 1
-                result.put()
+                    uac = UserAnswerCount()
+                    uac.user = user
+                    uac.count = 1
+                    uac.put()
             self.response.out.write(json_output('ok', {'message': '答对了，不错哦'}))
             return
         self.response.out.write(json_output('fail', {'message': '再想想？'}))
