@@ -17,7 +17,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
-SYSTEM_VERSION = '1.0.4'
+SYSTEM_VERSION = '1.0.5'
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
@@ -54,10 +54,21 @@ class BaseHandler(webapp.RequestHandler):
             topic.order('votedown')
         list = topic.fetch(limit=15, offset=offset)
 
+        uac = UserAnswerCount()
+        result = uac.getTop()
+
+        topuser = []
+        for item in result:
+            topuser.append({
+                'gravatar': get_gravatar(item.user.email()),
+                'name': item.user.nickname(),
+                'count': item.count,
+            })
+
         tpl = 'index'
         if self.is_ajax:
             tpl = 'topic_list'
-        default_data = {'list': list, 'page': page+1, 'list_length': len(list) }
+        default_data = {'list': list, 'page': page+1, 'list_length': len(list), 'topuser': topuser }
         data.update(default_data)
         self.render(tpl, data)
 
@@ -95,18 +106,7 @@ class BaseHandler(webapp.RequestHandler):
 
 class MainPage(BaseHandler):
     def get(self):
-        uac = UserAnswerCount()
-        result = uac.getTop()
-
-        topuser = []
-        for item in result:
-            topuser.append({
-                'gravatar': get_gravatar(item.user.email()),
-                'name': item.user.nickname(),
-                'count': item.count,
-            })
-
-        self.render_index('latest', {'topuser': topuser})
+        self.render_index('latest')
 
 class SentenceHandler(BaseHandler):
     def post(self):
