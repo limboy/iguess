@@ -1,5 +1,6 @@
 #coding=utf-8
 import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 import sys
 import logging
 import re
@@ -18,7 +19,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
-SYSTEM_VERSION = '1.0.8'
+SYSTEM_VERSION = '1.0.9'
 
 ITEMS_PER_PAGE = 15
 
