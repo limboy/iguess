@@ -29,12 +29,12 @@ def json_output(status, data={}):
 def get_gravatar(email):
     return "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?s=36"
 
-def get_mem_key(pattern):
+def get_mem_key(pattern, prefix = ''):
     user = users.get_current_user()
     if user:
-        mem_key = pattern+'::'+user.user_id()
+        mem_key = prefix+'::'+pattern+'::'+user.user_id()
     else:
-        mem_key = pattern+'::guest'
+        mem_key = prefix+'::'+pattern+'::guest'
     return mem_key
 
 class BaseHandler(webapp.RequestHandler):
@@ -58,9 +58,9 @@ class BaseHandler(webapp.RequestHandler):
     def render_index(self, type='latest', data = {}):
         if not self.is_ajax:
             if self.is_mobi:
-                mem_key = get_mem_key('index.mobi')
+                mem_key = get_mem_key('index.mobi', type)
             else:
-                mem_key = get_mem_key('index')
+                mem_key = get_mem_key('index', type)
             result = memcache.get(mem_key)
             if result:
                 self.response.out.write(result)
@@ -92,9 +92,9 @@ class BaseHandler(webapp.RequestHandler):
             tpl = 'topic_list'
         default_data = {'list': list, 'page': page+1, 'list_length': len(list), 'topuser': topuser }
         data.update(default_data)
-        self.render(tpl, data)
+        self.render(tpl, data, type)
 
-    def render(self, tpl, values = {}):
+    def render(self, tpl, values = {}, type=''):
         user = users.get_current_user()
         values['is_dev'] = self.is_dev;
         values['system_version'] = SYSTEM_VERSION
@@ -120,9 +120,9 @@ class BaseHandler(webapp.RequestHandler):
             path = os.path.join('tpl', tpl + '.html')
             output = template.render(path, values)
             if self.is_mobi:
-                mem_key = get_mem_key('index.mobi')
+                mem_key = get_mem_key('index.mobi', type)
             else:
-                mem_key = get_mem_key('index')
+                mem_key = get_mem_key('index', type)
             memcache.set(mem_key, output, 60)
             self.response.out.write(output)
         else:
