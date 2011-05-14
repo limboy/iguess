@@ -24,7 +24,7 @@
 </div>
 {% endfor %}
 
-{% if list_length == 15 %}
+{% if list_length == items_per_page %}
 <a class="page_btn" href="/?page={{ page }}">更多</a>
 {% else %}
 <p class="no-more">莫有了~~~</p>

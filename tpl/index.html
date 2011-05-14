@@ -20,7 +20,7 @@
                     {% if user.logged_in %}
                     <div class="box-grey" id="publish">
                         <div class="body">
-                            <form>
+                            <form action="/publish" method="post">
                                 <p><textarea name="sentence" placeholder="来段NB的电影台词"></textarea></p>
                                 <p><input name="answer" placeholder="电影名"  type="TEXT" /><input type="SUBMIT" class="btn disabled" value="让他们猜去吧" /></p>
                             </form>

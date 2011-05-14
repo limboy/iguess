@@ -7,8 +7,9 @@ import urllib, hashlib
 import simplejson as json
 
 
-from google.appengine.ext import webapp
 from google.appengine.api import users
+from google.appengine.api import memcache
+from google.appengine.ext import webapp
 from google.appengine.ext.webapp import Request
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.dist import use_library
@@ -17,13 +18,23 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
-SYSTEM_VERSION = '1.0.7'
+SYSTEM_VERSION = '1.0.8'
+
+ITEMS_PER_PAGE = 15
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
 
 def get_gravatar(email):
     return "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?s=36"
+
+def get_mem_key(pattern):
+    user = users.get_current_user()
+    if user:
+        mem_key = pattern+'::'+user.user_id()
+    else:
+        mem_key = pattern+'::guest'
+    return mem_key
 
 class BaseHandler(webapp.RequestHandler):
 
@@ -44,15 +55,25 @@ class BaseHandler(webapp.RequestHandler):
         return False
 
     def render_index(self, type='latest', data = {}):
+        if not self.is_ajax:
+            if self.is_mobi:
+                mem_key = get_mem_key('index.mobi')
+            else:
+                mem_key = get_mem_key('index')
+            result = memcache.get(mem_key)
+            if result:
+                self.response.out.write(result)
+                return
+
         page = int(self.request.get('page', 1))
-        offset = (page - 1) * 15
+        offset = (page - 1) * ITEMS_PER_PAGE
         topic = Topic.all()
         if type == 'latest':
             topic.order('-date')
         elif type == 'top':
             topic.order('-voteup')
             topic.order('votedown')
-        list = topic.fetch(limit=15, offset=offset)
+        list = topic.fetch(limit=ITEMS_PER_PAGE, offset=offset)
 
         uac = UserAnswerCount()
         result = uac.getTop()
@@ -76,6 +97,7 @@ class BaseHandler(webapp.RequestHandler):
         user = users.get_current_user()
         values['is_dev'] = self.is_dev;
         values['system_version'] = SYSTEM_VERSION
+        values['items_per_page'] = ITEMS_PER_PAGE
         if user:
             values['user'] = {
                 'logged_in': True,
@@ -96,6 +118,11 @@ class BaseHandler(webapp.RequestHandler):
         if not self.is_ajax:
             path = os.path.join('tpl', tpl + '.html')
             output = template.render(path, values)
+            if self.is_mobi:
+                mem_key = get_mem_key('index.mobi')
+            else:
+                mem_key = get_mem_key('index')
+            memcache.set(mem_key, output, 60)
             self.response.out.write(output)
         else:
             path = os.path.join('tpl', tpl + '.tpl')
@@ -126,11 +153,21 @@ class SentenceHandler(BaseHandler):
         topic.sentence = self.request.get('sentence')[:300]
         topic.answer = self.request.get('answer')
         topic.put()
-        self.response.out.write(json_output('ok', {
-            'user': topic.author.nickname(),
-            'sentence': topic.sentence,
-            'answer': topic.answer,
-        }))
+
+        if self.is_mobi:
+            mem_key = get_mem_key('index.mobi')
+        else:
+            mem_key = get_mem_key('index')
+        memcache.delete(mem_key)
+
+        if self.is_ajax:
+            self.response.out.write(json_output('ok', {
+                'user': topic.author.nickname(),
+                'sentence': topic.sentence,
+                'answer': topic.answer,
+            }))
+        else:
+            self.redirect('/')
 
 class VoteHandler(BaseHandler):        
     def post(self):
@@ -153,16 +190,17 @@ class VoteHandler(BaseHandler):
         vote.mark = int(self.request.get('mark'))
         vote.put()
 
+        if self.is_mobi:
+            mem_key = get_mem_key('index.mobi')
+        else:
+            mem_key = get_mem_key('index')
+        memcache.delete(mem_key)
+
         self.response.out.write(json_output('ok'))
 
 class TopHandler(BaseHandler):
     def get(self):
         self.render_index('top')
-
-class DelHandler(BaseHandler):
-    def get(self):
-        topic = Topic.get(self.request.get('key').strip()).delete()
-        self.redirect('/')
 
 class GuessHandler(BaseHandler):
     def post(self):
@@ -217,7 +255,6 @@ application = webapp.WSGIApplication(
      ('/publish', SentenceHandler),
      ('/vote', VoteHandler),
      ('/top', TopHandler),
-     ('/del', DelHandler),
      ('/guess', GuessHandler),
      ('/getanswer', ViewAnswerHandler),
 		],
