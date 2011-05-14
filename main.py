@@ -124,7 +124,10 @@ class BaseHandler(webapp.RequestHandler):
                 mem_key = get_mem_key('index.mobi', type)
             else:
                 mem_key = get_mem_key('index', type)
-            memcache.set(mem_key, output, 60)
+            if type == 'top':
+                memcache.set(mem_key, output, 1800)
+            else:
+                memcache.set(mem_key, output, 60)
             self.response.out.write(output)
         else:
             path = os.path.join('tpl', tpl + '.tpl')
