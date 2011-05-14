@@ -405,7 +405,7 @@ $(function(){
                 $form.find('.success').html(result.content.message);
                 $form.find('input[name="answer"]').attr('disabled', true).css('background', '#eee').get(0).blur();
             } else {
-                $self.parent().find('.fail').show().find('.message').text(result.content.message);
+                $self.parent().parent().find('.fail').show().find('.message').text(result.content.message);
             }
         }, 'json');
     });

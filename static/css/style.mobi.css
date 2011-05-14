@@ -106,6 +106,7 @@ span.real-answer {
     padding:3px;
     margin:3px 5px 0 0;
     font-size:14px;
+    width:90px;
 }
 .answer .success {
     color: green;

@@ -1,12 +1,13 @@
 #coding=utf-8
 import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+import logging
 import sys
 import logging
 import re
 import urllib, hashlib
 import simplejson as json
 
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from google.appengine.api import users
 from google.appengine.api import memcache
@@ -19,7 +20,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
-SYSTEM_VERSION = '1.0.9'
+SYSTEM_VERSION = '1.0.10'
 
 ITEMS_PER_PAGE = 15
 
