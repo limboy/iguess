@@ -15,6 +15,6 @@
 <body>
     {% include 'header.mobi.tpl' %}
     <div id="entity-list">
-    {% include 'topic_list.mobi.tpl' %}
+    {{ topic_list }}
     </div>
 </body>

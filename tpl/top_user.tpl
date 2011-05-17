@@ -1,6 +1,3 @@
-{% if top_user_cache %}
-{{ top_user_cache }}
-{% else %}
 <div class="box-white">
     <div class="header">达人秀</div>
     <div class="body" style="padding-bottom:0">
@@ -11,4 +8,3 @@
         </ul>
     </div>
 </div>
-{% endif %}

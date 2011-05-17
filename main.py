@@ -9,7 +9,6 @@ import re
 import hashlib
 import simplejson as json
 
-
 from google.appengine.api import users
 from google.appengine.api import memcache
 from google.appengine.ext import webapp
@@ -18,8 +17,8 @@ from google.appengine.ext.webapp import template
 from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
 SYSTEM_VERSION = '1.1.0'
-
-ITEMS_PER_PAGE = 2
+ITEMS_PER_PAGE = 15
+SIMULATE_MOBILE = True
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
@@ -37,11 +36,14 @@ class BaseHandler(webapp.RequestHandler):
     @property
     def is_mobi(self):
         user_agent = self.request.headers['User-Agent']
-        if (re.search('iPod|iPhone|Android|Opera Mini|BlackBerry|webOS|UCWEB|Blazer|PSP', user_agent)):
+        if (re.search('iPod|iPhone|Android|Opera Mini|BlackBerry|webOS|UCWEB|Blazer|PSP', user_agent)) or SIMULATE_MOBILE:
             return True
         return False
 
     def get_render(self, tpl, data = {}):
+        if self.is_mobi:
+            tpl += '.mobi'
+
         data['system_version'] = SYSTEM_VERSION
         user = users.get_current_user()
         data['user'] = {}
@@ -53,6 +55,7 @@ class BaseHandler(webapp.RequestHandler):
             data['user']['login_url'] = users.create_login_url('/')
             data['user']['logged_in'] = False
         data['items_per_page'] = ITEMS_PER_PAGE
+
         path = os.path.join('tpl', tpl + '.tpl')
         return template.render(path, data)
     
@@ -101,19 +104,17 @@ class BaseHandler(webapp.RequestHandler):
         return self.get_render('topic_list', {'list': topic_list, 'list_length': len(topic_list), 'page': page+1})
 
     def render(self, tpl, values = {}):
-        if self.is_mobi:
-            tpl += '.mobi'
-
         self.response.out.write(self.get_render(tpl, values))
         return
 
 class MainPage(BaseHandler):
     def get(self):
         if not self.is_ajax:
-            self.render('index', {
-                'topic_list': self.get_render_topic_list('latest'),
-                'top_user': self.get_render_top_user(),
-                })
+            data = {'topic_list': self.get_render_topic_list('latest')}
+            if not self.is_mobi:
+                data['top_user'] = self.get_render_top_user()
+
+            self.render('index', data)
         else:
             self.response.out.write(json_output('ok', {'html': self.get_render_topic_list('latest')}))
 
