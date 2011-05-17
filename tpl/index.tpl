@@ -18,7 +18,7 @@
                         <div class="body">
                             <form action="/publish" method="post">
                                 <p><textarea name="sentence" placeholder="来段NB的电影台词"></textarea></p>
-                                <p><input name="answer" placeholder="电影名"  type="TEXT" /><input type="SUBMIT" class="btn disabled" value="让他们猜去吧" /></p>
+                                <p><input name="answer" placeholder="电影名 (中文名或英文名)"  type="TEXT" /><input type="SUBMIT" class="btn disabled" value="让他们猜去吧" /></p>
                             </form>
                         </div>
                     </div>
@@ -53,7 +53,9 @@
                                 </div>
                             </div>
                             {% endif %}
-							{% include 'topic_list.tpl' %}
+
+							{{ topic_list }}
+
                         </div>
                     </div>
                 </div>
@@ -69,17 +71,7 @@
 
                     <p class="seperator"></p>
 
-                    <div class="box-white">
-                        <div class="header">达人秀</div>
-                        <div class="body" style="padding-bottom:0">
-                            <ul class="topuser clear">
-                            {% for item in topuser %}
-                            <li><a title="{{ item.name }}, 共答对了{{ item.count }}道题" href="https://profiles.google.com/{{item.name}}"><img src="{{ item.gravatar }}" /></a></li>
-                            {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-
+					{{ top_user }}
                     <p class="seperator"></p>
 
                     <div class="box-white">

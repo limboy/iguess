@@ -1,28 +1,25 @@
 #coding=utf-8
 import os
-import logging
-import sys
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+from google.appengine.dist import use_library
+use_library('django', '1.2')
+
 import logging
 import re
-import urllib, hashlib
+import hashlib
 import simplejson as json
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from google.appengine.api import users
 from google.appengine.api import memcache
 from google.appengine.ext import webapp
-from google.appengine.ext.webapp import Request
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.dist import use_library
-use_library('django', '1.2')
 from google.appengine.ext.webapp import template
-from google.appengine.ext import db
 from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
-SYSTEM_VERSION = '1.0.10'
+SYSTEM_VERSION = '1.1.0'
 
-ITEMS_PER_PAGE = 15
+ITEMS_PER_PAGE = 2
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
@@ -30,19 +27,7 @@ def json_output(status, data={}):
 def get_gravatar(email):
     return "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?s=36"
 
-def get_mem_key(pattern, prefix = ''):
-    user = users.get_current_user()
-    if user:
-        mem_key = prefix+'::'+pattern+'::'+user.user_id()
-    else:
-        mem_key = prefix+'::'+pattern+'::guest'
-    return mem_key
-
 class BaseHandler(webapp.RequestHandler):
-
-    @property
-    def is_dev(self):
-        return self.request.remote_addr == '127.0.0.1'
 
     @property
     def is_ajax(self):
@@ -56,92 +41,99 @@ class BaseHandler(webapp.RequestHandler):
             return True
         return False
 
-    def render_index(self, type='latest', data = {}):
-        if not self.is_ajax:
-            if self.is_mobi:
-                mem_key = get_mem_key('index.mobi', type)
-            else:
-                mem_key = get_mem_key('index', type)
-            result = memcache.get(mem_key)
-            if result:
-                self.response.out.write(result)
-                return
-
-        page = int(self.request.get('page', 1))
-        offset = (page - 1) * ITEMS_PER_PAGE
-        topic = Topic.all()
-        if type == 'latest':
-            topic.order('-date')
-        elif type == 'top':
-            topic.order('-voteup')
-            topic.order('votedown')
-        list = topic.fetch(limit=ITEMS_PER_PAGE, offset=offset)
-
-        uac = UserAnswerCount()
-        result = uac.getTop()
-
-        topuser = []
-        for item in result:
-            topuser.append({
-                'gravatar': get_gravatar(item.user.email()),
-                'name': item.user.nickname(),
-                'count': item.count,
-            })
-
-        tpl = 'index'
-        if self.is_ajax:
-            tpl = 'topic_list'
-        default_data = {'list': list, 'page': page+1, 'list_length': len(list), 'topuser': topuser }
-        data.update(default_data)
-        self.render(tpl, data, type)
-
-    def render(self, tpl, values = {}, type=''):
+    def get_render(self, tpl, data = {}):
+        data['system_version'] = SYSTEM_VERSION
         user = users.get_current_user()
-        values['is_dev'] = self.is_dev;
-        values['system_version'] = SYSTEM_VERSION
-        values['items_per_page'] = ITEMS_PER_PAGE
+        data['user'] = {}
         if user:
-            values['user'] = {
-                'logged_in': True,
-                'nickname': user.nickname(),
-                'logout_url': users.create_logout_url('/'),
-                'is_admin': users.is_current_user_admin(),
-            }
+            data['user']['logout_url'] = users.create_logout_url('/')
+            data['user']['nickname'] = user.nickname()
+            data['user']['logged_in'] = True
         else:
-            values['user'] = {
-                'is_admin': False,
-                'logged_in': False,
-                'login_url': users.create_login_url('/'),
-            }
+            data['user']['login_url'] = users.create_login_url('/')
+            data['user']['logged_in'] = False
+        data['items_per_page'] = ITEMS_PER_PAGE
+        path = os.path.join('tpl', tpl + '.tpl')
+        return template.render(path, data)
+    
+    def get_render_top_user(self):
+        cache = memcache.get('top_user')
+        if not cache:
+            uac = UserAnswerCount()
+            result = uac.getTop()
 
+            topuser = []
+            for item in result:
+                topuser.append({
+                    'gravatar': get_gravatar(item.user.email()),
+                    'name': item.user.nickname(),
+                    'count': item.count,
+                })
+
+            data = {'topuser': topuser }
+            cache = self.get_render('top_user', data)
+            memcache.set('top_user', cache, 60)
+        return cache
+
+    def get_render_topic_list(self, list_type='latest'):
+        page = int(self.request.get('page', 1))
+
+        user = users.get_current_user()
+        user_key = user.user_id() if user else 'guest'
+        topic_list = memcache.get('topic_list::'+list_type+'::'+user_key)
+
+        if not topic_list or page != 1:
+            offset = (page - 1) * ITEMS_PER_PAGE
+            topic = Topic.all()
+            if list_type == 'latest':
+                topic.order('-date')
+            elif list_type == 'top':
+                topic.order('-voteup')
+                topic.order('votedown')
+            topic_list = topic.fetch(limit=ITEMS_PER_PAGE, offset=offset)
+
+        if page == 1:
+            if type == 'top':
+                memcache.set('topic_list::top::'+user_key, topic_list, 1800)
+            else:
+                memcache.set('topic_list::latest::'+user_key, topic_list, 60)
+
+        return self.get_render('topic_list', {'list': topic_list, 'list_length': len(topic_list), 'page': page+1})
+
+    def render(self, tpl, values = {}):
         if self.is_mobi:
             tpl += '.mobi'
 
-        if not self.is_ajax:
-            path = os.path.join('tpl', tpl + '.html')
-            output = template.render(path, values)
-            if self.is_mobi:
-                mem_key = get_mem_key('index.mobi', type)
-            else:
-                mem_key = get_mem_key('index', type)
-            if type == 'top':
-                memcache.set(mem_key, output, 1800)
-            else:
-                memcache.set(mem_key, output, 60)
-            self.response.out.write(output)
-        else:
-            path = os.path.join('tpl', tpl + '.tpl')
-            output = template.render(path, values)
-            self.response.out.write(json_output('ok', {'html': output}))
+        self.response.out.write(self.get_render(tpl, values))
         return
-
 
 class MainPage(BaseHandler):
     def get(self):
-        self.render_index('latest')
+        if not self.is_ajax:
+            self.render('index', {
+                'topic_list': self.get_render_topic_list('latest'),
+                'top_user': self.get_render_top_user(),
+                })
+        else:
+            self.response.out.write(json_output('ok', {'html': self.get_render_topic_list('latest')}))
+
+class TopHandler(BaseHandler):
+    def get(self):
+        if not self.is_ajax:
+            self.render('index', {
+                'topic_list': self.get_render_topic_list('top'),
+                'top_user': self.get_render_top_user(),
+                })
+        else:
+            self.response.out.write(json_output('ok', {'html': self.get_render_topic_list('top')}))
 
 class SentenceHandler(BaseHandler):
     def post(self):
+        user = users.get_current_user()
+        if not user:
+            self.response.out.write('~!@#$%')
+            return
+
         if (not self.request.get('sentence')):
             self.response.out.write(json_output('error', {
                 'message': 'empty sentence',
@@ -159,11 +151,7 @@ class SentenceHandler(BaseHandler):
         topic.answer = self.request.get('answer')
         topic.put()
 
-        if self.is_mobi:
-            mem_key = get_mem_key('index.mobi')
-        else:
-            mem_key = get_mem_key('index')
-        memcache.delete(mem_key)
+        memcache.delete('topic_list::latest'+user.user_id())
 
         if self.is_ajax:
             self.response.out.write(json_output('ok', {
@@ -176,6 +164,11 @@ class SentenceHandler(BaseHandler):
 
 class VoteHandler(BaseHandler):        
     def post(self):
+        user = users.get_current_user()
+        if not user:
+            self.response.out.write('~!@#$%')
+            return
+
         topic = Topic.get(self.request.get('entity'))
         if int(self.request.get('mark')) != 1:
             if not topic.votedown:
@@ -195,17 +188,8 @@ class VoteHandler(BaseHandler):
         vote.mark = int(self.request.get('mark'))
         vote.put()
 
-        if self.is_mobi:
-            mem_key = get_mem_key('index.mobi')
-        else:
-            mem_key = get_mem_key('index')
-        memcache.delete(mem_key)
-
+        memcache.delete('topic_list::latest'+user.user_id())
         self.response.out.write(json_output('ok'))
-
-class TopHandler(BaseHandler):
-    def get(self):
-        self.render_index('top')
 
 class GuessHandler(BaseHandler):
     def post(self):
@@ -233,6 +217,8 @@ class GuessHandler(BaseHandler):
                     uac.user = user
                     uac.count = 1
                     uac.put()
+                memcache.delete('topic_list::latest'+user.user_id())
+
             self.response.out.write(json_output('ok', {'message': '答对了，不错哦'}))
             return
         self.response.out.write(json_output('fail', {'message': '再想想？'}))
@@ -250,6 +236,7 @@ class ViewAnswerHandler(BaseHandler):
             ua.user = user
             ua.topic = topic
             ua.put()
+            memcache.delete('topic_list::latest'+user.user_id())
             self.response.out.write(json_output('ok', {'message': topic.answer}))
             return
         self.response.out.write('登录后就能看到答案了');
