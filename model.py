@@ -1,7 +1,7 @@
 #coding=utf-8
 import logging
 
-from google.appengine.ext import db, deferred
+from google.appengine.ext import db
 from google.appengine.api import users
 
 def TopUser():
@@ -15,6 +15,8 @@ class Topic(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
     voteup = db.IntegerProperty()
     votedown = db.IntegerProperty()
+    answered_count = db.IntegerProperty()
+    failed_count = db.IntegerProperty()
 
     def can_vote(self):
         user = users.get_current_user()
@@ -92,3 +94,15 @@ class UserAnswerCount(db.Model):
         uac.order('-count')
         uac.fetch(limit=10)
         return uac
+
+    def add(self, user):
+        uac = self.all()
+        uac.filter('user =', user)
+        result = uac.get()
+        if result:
+            result.count += 1
+            result.put()
+        else:
+            self.user = user
+            self.count = 1
+            self.put()

@@ -18,7 +18,7 @@ from model import Topic,Vote,UserAnswer,UserSeen,UserAnswerCount
 
 SYSTEM_VERSION = '1.1.0'
 ITEMS_PER_PAGE = 15
-SIMULATE_MOBILE = True
+SIMULATE_MOBILE = False
 
 def json_output(status, data={}):
     return json.dumps({'status': status, 'content': data})
@@ -207,21 +207,25 @@ class GuessHandler(BaseHandler):
                 ua.topic = topic
                 ua.put()
 
-                uac = UserAnswerCount.all()
-                uac.filter('user =', user)
-                result = uac.get()
-                if result:
-                    result.count += 1
-                    result.put()
-                else:
-                    uac = UserAnswerCount()
-                    uac.user = user
-                    uac.count = 1
-                    uac.put()
+                uac = UserAnswerCount()
+                uac.add(user)
+
                 memcache.delete('topic_list::latest'+user.user_id())
+
+            if not topic.answered_count:
+                topic.answered_count = 1
+            else:
+                topic.answered_count += 1
+            topic.put()
 
             self.response.out.write(json_output('ok', {'message': '答对了，不错哦'}))
             return
+        else:
+            if not topic.failed_count:
+                topic.failed_count = 1
+            else:
+                topic.failed_count += 1
+            topic.put()
         self.response.out.write(json_output('fail', {'message': '再想想？'}))
 
 class ViewAnswerHandler(BaseHandler):

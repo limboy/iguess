@@ -42,6 +42,15 @@
             </span>
             {% endif %} {% endif %} {% endif %}
             <a href="https://profiles.google.com/{{ segment.author.nickname }}" target="_blank" class="author">{{ segment.author.nickname }}</a>
+            {% if segment.answered_count or segment.failed_count %}
+            <div style="clear:both; color:#aaa;font-size:12px;padding-top:3px">有 {{ segment.failed_count|default:0|add:segment.answered_count|default:0 }} 人进行了尝试，
+            {% if segment.answered_count %}
+            有 {{ segment.answered_count }} 人答对了
+            {% else %}
+            但都没有答对
+            {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

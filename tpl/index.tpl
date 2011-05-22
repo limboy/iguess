@@ -77,6 +77,7 @@
                     <div class="box-white">
                         <div class="header">最新进展</div>
                         <div class="body">
+                            <p>11/05/23 添加了台词的挑战记录</p>
                             <p>11/05/14 绑定新域名:www.iguess.me</p>
                             <p>11/05/13 添加了达人秀功能</p>
                             <p>11/05/12 可以猜电影了~~~</p>
