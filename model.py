@@ -92,8 +92,8 @@ class UserAnswerCount(db.Model):
     def getTop(self):
         uac = self.all()
         uac.order('-count')
-        uac.fetch(limit=10)
-        return uac
+        result = uac.fetch(limit=10)
+        return result
 
     def add(self, user):
         uac = self.all()
